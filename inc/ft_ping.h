@@ -32,6 +32,8 @@
 
 # include "lib_getopt.h"
 
+# define MAYBE_UNUSED __attribute__((unused))
+
 # define VERSION "1.0.0"
 
 # define USAGE_MESSAGE \
@@ -59,6 +61,8 @@
 \t--timestamp\t\tSend ICMP_TIMESTAMP packets\n\
 \t--ip-timestamp <flag>\tIP timestamp type: \"tsonly\" or \"tsaddr\"\n\
 \t--usage\t\t\tDisplay a short usage message\n"
+
+# define SECOND_IN_USEC 1000000
 
 # define MAXIPLEN    60
 # define MAXICMPLEN  76
@@ -101,32 +105,31 @@ struct sockinfo
 	char ip_str[INET_ADDRSTRLEN];
 };
 
-struct packinfo {
+struct rtt_node
+{
+	struct timeval rtt;
+	struct rtt_node *next;
+};
+
+struct packinfo
+{
+	struct icmp_packet *packet;
 	int nb_send;
 	int nb_ok;
 	struct timeval *min;
 	struct timeval *max;
 	struct timeval avg;
-	struct timeval stddev;
+	struct timeval mdev;
 	struct rtt_node *rtt_list;
 	struct rtt_node *rtt_last;
 };
 
 struct pingopts
 {
-	bool address;                        // --address
-	bool mask;                           // --mask
-	bool echo;                           // --echo
 	int count;							 // -c, --count
-    double interval;					 // -i, --interval
-    int preload;					     // -l, --preload
-    char *pattern;						 // -p, --pattern
     int size;							 // -s, --size
-    int ttl;			                 // --ttl
-    int tos;							 // -T, --tos
     int timeout;						 // -w, --timeout
     int linger;						     // -W, --linger
-    bool timestamp;						 // --timestamp
 	int sock_flags;                      // Socket flags (SO_DEBUG, SO_DONTROUTE)
 	int opt_mask;                        // Bitmask for options
 };
@@ -135,11 +138,12 @@ struct pingdata
 {
 	struct sockinfo sockinfo;
 	struct pingopts opts;
+	struct packinfo packinfo;
 };
 
 void parse_opts(int ac, char **av);
 void stop_ping(int exit_code);
 void help_message(char *prog_name);
-struct icmp_packet build_packet(uint16_t seq);
+bool build_packet(uint16_t seq, struct icmp_packet **pack_ptr);
 
 #endif
