@@ -28,6 +28,7 @@
 # include <fcntl.h>
 # include <sys/time.h>
 # include <math.h>
+# include <limits.h>
 
 # include "lib_getopt.h"
 
@@ -59,31 +60,23 @@
 \t--ip-timestamp <flag>\tIP timestamp type: \"tsonly\" or \"tsaddr\"\n\
 \t--usage\t\t\tDisplay a short usage message\n"
 
-# define DEFAULT_PAYLOAD_SIZE 56
-# define MAX_PAYLOAD_SIZE 65507
+# define MAXIPLEN    60
+# define MAXICMPLEN  76
 
-#define OPT_FLOOD       0x001
-#define OPT_INTERVAL    0x002
-#define OPT_NUMERIC     0x004
-#define OPT_QUIET       0x008
-#define OPT_RROUTE      0x010
-#define OPT_VERBOSE     0x020
-#define OPT_IPTIMESTAMP 0x040
+# define PING_DEFAULT_DATA_LEN 56
+# define PING_MAX_DATA_LEN (65507 - MAXIPLEN - MAXICMPLEN)
 
-// Still need to figure these options
-// #define OPT_FLOWINFO    0x080
-// #define OPT_TCLASS      0x100
+# define L_OPT_USAGE 1
+
+# define OPT_NUMERIC     0x001
+# define OPT_QUIET       0x002
+# define OPT_RROUTE      0x004
+# define OPT_VERBOSE     0x008
 
 extern struct pingdata data;
+extern volatile bool stop;
 
-enum opts {
-	L_OPT_ADDRESS = 1,
-	L_OPT_MASK,
-	L_OPT_ECHO,
-	L_OPT_TIMESTAMP,
-	L_OPT_IP_TIMESTAMP,
-	L_OPT_USAGE
-};
+extern char *prog_name;
 
 struct icmp_hdr
 {
@@ -97,7 +90,7 @@ struct icmp_hdr
 struct icmp_packet
 {
     struct icmp_hdr hdr;
-    uint8_t payload[MAX_PAYLOAD_SIZE];
+    uint8_t payload[PING_MAX_DATA_LEN];
 };
 
 struct sockinfo

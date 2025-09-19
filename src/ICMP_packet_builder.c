@@ -33,15 +33,12 @@ struct icmp_packet build_packet(uint16_t seq)
 {
     struct icmp_packet packet;
     struct timeval timestamp;
-    unsigned long size = DEFAULT_PAYLOAD_SIZE;
+    unsigned long size = PING_DEFAULT_DATA_LEN;
 
-    if (data.opts.size > 0 && data.opts.size <= MAX_PAYLOAD_SIZE)
+    if (data.opts.size > 0 && data.opts.size <= PING_MAX_DATA_LEN)
         size = data.opts.size;
     memset(&packet, 0, sizeof(packet));
-    if (data.opts.timestamp)
-        packet.hdr.type = ICMP_TIMESTAMP;
-    else
-        packet.hdr.type = ICMP_ECHO;
+    packet.hdr.type = ICMP_ECHO;
     packet.hdr.code = 0;
     packet.hdr.id = htons(getpid() & 0xFFFF);
     packet.hdr.sequence = htons(seq);

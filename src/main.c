@@ -16,6 +16,8 @@ struct pingdata	data;
 
 volatile bool	stop = false;
 
+char *prog_name = NULL;
+
 void	sigint_handler(int signal __attribute__((unused)))
 {
 	stop = true;
@@ -23,7 +25,6 @@ void	sigint_handler(int signal __attribute__((unused)))
 
 void	stop_ping(int exit_code)
 {
-	free(data.opts.pattern);
 	free(data.sockinfo.hostname);
 	if (data.sockinfo.sockfd > 0)
 		close(data.sockinfo.sockfd);
@@ -85,20 +86,6 @@ bool init_socket(char *prog_name)
             fprintf(stderr, "%s: setsockopt SO_*: %s\n", prog_name, strerror(errno));
             return (false);
         }
-    if (data.opts.ttl > 0)
-        if (setsockopt(data.sockinfo.sockfd, IPPROTO_IP, IP_TTL, &data.opts.ttl,
-                       sizeof(data.opts.ttl)) < 0)
-        {
-            fprintf(stderr, "%s: setsockopt IP_TTL: %s\n", prog_name, strerror(errno));
-            return (false);
-        }
-    if (data.opts.tos >= 0)
-        if (setsockopt(data.sockinfo.sockfd, IPPROTO_IP, IP_TOS, &data.opts.tos,
-                       sizeof(data.opts.tos)) < 0)
-        {
-            fprintf(stderr, "%s: setsockopt IP_TOS: %s\n", prog_name, strerror(errno));
-            return (false);
-        }
     if (data.opts.timeout > 0)
     {
         struct timeval timeout;
@@ -113,8 +100,22 @@ bool init_socket(char *prog_name)
     return (true);
 }
 
+void	ping_loop()
+{
+	signal(SIGINT, sigint_handler);
+	while (!stop)
+	{
+		if (!send_ping())
+			break ;
+		if (!receive_ping())
+			break ;
+	}
+	finish_stats();
+}
+
 int		main(int ac, char **av)
 {
+	prog_name = av[0];
 	if (ac < 2)
 		return (help_message(av[0]), EXIT_FAILURE);
 	memset(&data, 0, sizeof(data));
@@ -135,5 +136,6 @@ int		main(int ac, char **av)
 	}
 	if (!init_socket(av[0]))
 		stop_ping(EXIT_FAILURE);
+	ping_loop();
 	stop_ping(EXIT_SUCCESS);
 }
