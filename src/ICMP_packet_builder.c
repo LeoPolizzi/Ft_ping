@@ -29,29 +29,28 @@ static uint16_t icmp_checksum(uint16_t *buf, int len)
     return ((uint16_t)(~sum));
 }
 
-bool	build_packet(uint16_t seq, struct icmp_packet **pack_ptr)
+bool build_packet(uint16_t seq, struct icmp_packet **pack_ptr)
 {
-    struct timeval timestamp;
+    if (!pack_ptr)
+        return false;
     unsigned long size = PING_DEFAULT_DATA_LEN;
-	struct icmp_packet *packet = *pack_ptr;
-
-	if (!pack_ptr)
-		return (false);
-	packet = calloc(1, sizeof(struct icmp_packet));
-	if (!packet)
-		return (false);
     if (data.opts.size > 0 && data.opts.size <= PING_MAX_DATA_LEN)
         size = data.opts.size;
-    memset(&packet, 0, sizeof(packet));
-    packet->hdr.type = ICMP_ECHO;
-    packet->hdr.code = 0;
-    packet->hdr.id = htons(getpid() & 0xFFFF);
+    struct icmp_packet *packet = calloc(1, sizeof(struct icmp_packet));
+    if (!packet)
+        return false;
+    packet->hdr.type     = ICMP_ECHO;
+    packet->hdr.code     = 0;
+    packet->hdr.id       = htons(getpid() & 0xFFFF);
     packet->hdr.sequence = htons(seq);
+    struct timeval timestamp;
     gettimeofday(&timestamp, NULL);
     memcpy(packet->payload, &timestamp, sizeof(timestamp));
     if (sizeof(timestamp) < size)
         memset(packet->payload + sizeof(timestamp), 0x42, size - sizeof(timestamp));
     packet->hdr.checksum = 0;
-    packet->hdr.checksum = icmp_checksum((uint16_t *)&packet, sizeof(packet));
+    packet->hdr.checksum = icmp_checksum((uint16_t *)packet, sizeof(struct icmp_hdr) + size);
+    *pack_ptr = packet;
     return (true);
 }
+

@@ -6,7 +6,7 @@
 /*   By: lpolizzi <lpolizzi@student.42nice.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/31 17:48:48 by lpolizzi          #+#    #+#             */
-/*   Updated: 2025/09/08 17:37:55 by lpolizzi         ###   ########.fr       */
+/*   Updated: 2025/09/25 13:26:07 by lpolizzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,7 @@
 
 extern struct pingdata data;
 extern volatile bool stop;
+extern struct timeval last_sent, start_time;
 
 extern char *prog_name;
 
@@ -135,5 +136,12 @@ void parse_opts(int ac, char **av);
 void stop_ping(int exit_code);
 void help_message(char *prog_name);
 bool build_packet(uint16_t seq, struct icmp_packet **pack_ptr);
+bool init_socket(char *prog_name);
+bool resolve_hostname(char *prog_name, char *hostname);
+void ping_loop(void);
+void free_list(struct rtt_node **head);
+void sigint_handler(int signal MAYBE_UNUSED);
+void add_rtt(struct timeval rtt);
+void finish_stats();
 
 #endif
