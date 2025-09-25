@@ -14,7 +14,7 @@
 
 struct pingdata	data;
 
-struct timeval last_sent = {0, 0};
+struct timeval last_sent = {0, 0}, start_time = {0, 0};
 
 volatile bool	stop = false;
 
@@ -105,15 +105,14 @@ bool	resolve_hostname(char *prog_name, char *hostname)
 	struct addrinfo	*res;
 
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_RAW;
-	hints.ai_protocol = IPPROTO_ICMP;
+	hints.ai_family = AF_INET;
 	if (getaddrinfo(hostname, NULL, &hints, &res) != 0)
 	{
 		fprintf(stderr, "%s: %s: No address associated with hostname\n", prog_name, hostname);
 		return (false);
 	}
 	data.sockinfo.addr = *(struct sockaddr_in *)res->ai_addr;
+	data.sockinfo.addr_len = res->ai_addrlen;
 	data.sockinfo.hostname = strdup(hostname);
 	if (inet_ntop(AF_INET, &((struct sockaddr_in *)res->ai_addr)->sin_addr, data.sockinfo.ip_str, sizeof(data.sockinfo.ip_str)) == NULL)
 	{
@@ -212,22 +211,45 @@ bool	send_ping()
 	return (true);
 }
 
-void	ping_loop()
+void ping_loop(void)
 {
-	signal(SIGINT, sigint_handler);
-	gettimeofday(&last_sent, NULL);
-	fprintf(stdout, "PING %s (%s) %d(%ld) bytes of data.\n", data.sockinfo.hostname, data.sockinfo.ip_str, (int)(sizeof(data.packinfo.packet->hdr) + data.opts.size), sizeof(data.packinfo.packet->hdr) + data.opts.size + 28);
-	while (!stop)
-	{
-		if (!send_ping())
-			break ;
-		usleep(SECOND_IN_USEC - (data.packinfo.rtt_last->rtt.tv_sec * 1e6 + data.packinfo.rtt_last->rtt.tv_usec));
-		if (!receive_ping())
-			break ;
-	}
-	if (!stop)
-		sleep(data.opts.linger);
-	finish_stats();
+    signal(SIGINT, sigint_handler);
+    gettimeofday(&start_time, NULL);
+    last_sent = start_time;
+    fprintf(stdout, "PING %s (%s) %d(%ld) bytes of data.\n", data.sockinfo.hostname,data.sockinfo.ip_str, (int)(sizeof(data.packinfo.packet->hdr) + data.opts.size), (long)(sizeof(data.packinfo.packet->hdr) + data.opts.size + 28));
+    while (!stop)
+    {
+        if (!send_ping())
+            break;
+        long elapsed_us = data.packinfo.rtt_last->rtt.tv_sec * 1000000L + data.packinfo.rtt_last->rtt.tv_usec;
+        long wait_us = SECOND_IN_USEC - elapsed_us;
+        if (wait_us < 0)
+            wait_us = 0;
+        struct timeval timeout;
+        timeout.tv_sec  = wait_us / 1000000L;
+        timeout.tv_usec = wait_us % 1000000L;
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(data.sockinfo.sockfd, &readfds);
+        int ret = select(data.sockinfo.sockfd + 1, &readfds, NULL, NULL, &timeout);
+        if (ret < 0)
+		{
+			if (errno != EINTR)
+			{
+				fprintf(stderr, "%s: select: %s\n", prog_name, strerror(errno));
+				stop_ping(EXIT_FAILURE);
+			}
+			continue;
+        }
+        if (ret == 0)
+            continue;
+        if (FD_ISSET(data.sockinfo.sockfd, &readfds))
+            if (!receive_ping())
+                break;
+    }
+    if (!stop)
+        sleep(data.opts.linger);
+    finish_stats();
 }
 
 int		main(int ac, char **av)

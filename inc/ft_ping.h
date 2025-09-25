@@ -36,30 +36,19 @@
 
 # define VERSION "1.0.0"
 
-# define USAGE_MESSAGE \
-"\t-c, --count <count>\tStop after sending (and receiving) <count> ECHO_RESPONSE packets\n\
+# define USAGE_MESSAGE "\
+\t-c, --count <count>\tStop after sending (and receiving) <count> ECHO_RESPONSE packets\n\
 \t-d, --debug\t\tSet the SO_DEBUG option on the socket being used\n\
-\t-f, --flood\t\tFlood ping (may be hard on network; root only)\n\
-\t-i, --interval <wait>\tWait <wait> seconds between sending each packet\n\
-\t-l, --preload <preload>\tSend <preload> packets as fast as possible before normal mode\n\
 \t-n, --numeric\t\tNumeric output only (no symbolic name resolution)\n\
-\t-p, --pattern <pattern>\tSpecify up to 16 bytes to fill the packet\n\
 \t-q, --quiet\t\tQuiet output (only summary lines shown)\n\
 \t-R, --route\t\tRecord route and display it on returned packets\n\
 \t-r, --ignore-routing\tBypass routing tables; send directly on attached network\n\
 \t-s, --size <packetsize>\tNumber of data bytes to send (default 56)\n\
 \t-v, --verbose\t\tVerbose output (other ICMP packets shown)\n\
-\t-t, --ttl <N>\t\tSet packet time-to-live\n\
-\t-T, --tos <num>\t\tSet packet type of service (TOS)\n\
 \t-w, --timeout <N>\tStop after <N> seconds\n\
 \t-W, --linger <N>\tNumber of seconds to wait for response\n\
 \t-?, --help\t\tDisplay this help message\n\
 \t-V, --version\t\tPrint program version\n\
-\t--address\t\tSend ICMP_ADDRESS packets (root only)\n\
-\t--mask\t\t\tSame as --address\n\
-\t--echo\t\t\tSend ICMP_ECHO packets (default)\n\
-\t--timestamp\t\tSend ICMP_TIMESTAMP packets\n\
-\t--ip-timestamp <flag>\tIP timestamp type: \"tsonly\" or \"tsaddr\"\n\
 \t--usage\t\t\tDisplay a short usage message\n"
 
 # define SECOND_IN_USEC 1000000
@@ -102,6 +91,7 @@ struct sockinfo
 	int sockfd;
 	char *hostname;
 	struct sockaddr_in addr;
+	socklen_t addr_len;
 	char ip_str[INET_ADDRSTRLEN];
 };
 
