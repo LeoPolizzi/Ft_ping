@@ -6,7 +6,7 @@
 /*   By: lpolizzi <lpolizzi@student.42nice.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/01 16:37:31 by lpolizzi          #+#    #+#             */
-/*   Updated: 2025/09/08 16:15:51 by lpolizzi         ###   ########.fr       */
+/*   Updated: 2025/09/28 17:27:12 by lpolizzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ static const struct option ping_longopts[] = {
 	{"count",         REQ_ARG,		0, 'c'},
 	{"debug",         NO_ARG,       0, 'd'},
 	{"numeric",       NO_ARG,       0, 'n'},
+	{"preload",       REQ_ARG,		0, 'l'},
 	{"quiet",         NO_ARG,       0, 'q'},
 	{"ignore-routing",NO_ARG,       0, 'r'},
 	{"route",         NO_ARG,       0, 'R'},
@@ -57,7 +58,7 @@ void parse_opts(int ac, char **av)
 {
     int c;
 
-    while ((c = ft_getopt(ac, av, "dnqrRvV?c:s:w:W:", ping_longopts, NULL, false)) != -1)
+    while ((c = ft_getopt(ac, av, "dnqrRvV?c:l:s:w:W:", ping_longopts, NULL, false)) != -1)
     {
         switch (c)
         {
@@ -81,6 +82,9 @@ void parse_opts(int ac, char **av)
 			break;
 		case ('c'):
 			data.opts.count = ping_convert_number(g_optarg, 0, true);
+			break;
+		case ('l'):
+			data.opts.preload = ping_convert_number(g_optarg, 1000, true);
 			break;
 		case ('s'):
 			data.opts.size = ping_convert_number(g_optarg, PING_MAX_DATA_LEN, true);

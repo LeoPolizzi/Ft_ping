@@ -6,7 +6,7 @@
 /*   By: lpolizzi <lpolizzi@student.42nice.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/25 13:17:24 by lpolizzi          #+#    #+#             */
-/*   Updated: 2025/09/25 13:17:26 by lpolizzi         ###   ########.fr       */
+/*   Updated: 2025/09/28 17:33:20 by lpolizzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 bool init_socket(char *prog_name)
 {
     int one = 1;
+	char rspace[MAX_IPOPTLEN];
 
     data.sockinfo.sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (data.sockinfo.sockfd < 0)
@@ -28,6 +29,8 @@ bool init_socket(char *prog_name)
                 fprintf(stderr, "%s: Lacking privilege for icmp socket.\n", prog_name);
                 return (false);
             }
+			else if (data.opts.opt_mask & OPT_VERBOSE)
+					fprintf(stderr, "%s: sock4.fd: %d (socktype: SOCK_DGRAM), sock6.fd: Not Implemented, ", prog_name, data.sockinfo.sockfd);
         }
         else
         {
@@ -35,7 +38,9 @@ bool init_socket(char *prog_name)
             return (false);
         }
     }
-    if (data.opts.sock_flags != 0)
+	else if (data.opts.opt_mask & OPT_VERBOSE)
+   			fprintf(stderr, "%s: sock4.fd: %d (socktype: SOCK_RAW), sock6.fd: Not Implemented, ", prog_name, data.sockinfo.sockfd);
+	if (data.opts.sock_flags != 0)
         if (setsockopt(data.sockinfo.sockfd, SOL_SOCKET, data.opts.sock_flags, &one, sizeof(one)) < 0)
         {
             fprintf(stderr, "%s: setsockopt SO_*: %s\n", prog_name, strerror(errno));
@@ -54,12 +59,11 @@ bool init_socket(char *prog_name)
     }
 	if (data.opts.opt_mask & OPT_RROUTE)
 	{
-		unsigned char rr[40];
-		rr[0] = 7;
-		rr[1] = 39;
-		rr[2] = 4;
-		memset(rr+3, 0, 36);
-		if (setsockopt(data.sockinfo.sockfd, IPPROTO_IP, IP_OPTIONS, rr, sizeof(rr)) < 0)
+		memset(rspace, 0, sizeof (rspace));
+		rspace[IPOPT_OPTVAL] = IPOPT_RR;
+		rspace[IPOPT_OLEN] = sizeof (rspace) - 1;
+		rspace[IPOPT_OFFSET] = IPOPT_MINOFF;
+		if (setsockopt(data.sockinfo.sockfd, IPPROTO_IP, IP_OPTIONS, rspace, sizeof (rspace)) < 0)
 		{
 			fprintf(stderr, "%s: setsockopt IP_OPTIONS: %s\n", prog_name, strerror(errno));
 			return (false);

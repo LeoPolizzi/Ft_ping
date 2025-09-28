@@ -6,7 +6,7 @@
 /*   By: lpolizzi <lpolizzi@student.42nice.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/25 13:16:53 by lpolizzi          #+#    #+#             */
-/*   Updated: 2025/09/25 13:16:54 by lpolizzi         ###   ########.fr       */
+/*   Updated: 2025/09/28 17:10:24 by lpolizzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ bool	resolve_hostname(char *prog_name, char *hostname)
 		freeaddrinfo(res);
 		return (false);
 	}
+	if (data.opts.opt_mask & OPT_VERBOSE)
+		fprintf(stderr, "hints.ai_family: AF_INET\n%s: ai->ai_family: AF_INET, ai->ai_canonname: \'%s\'\n", prog_name, hostname);
 	freeaddrinfo(res);
 	return (true);
 }

@@ -6,7 +6,7 @@
 /*   By: lpolizzi <lpolizzi@student.42nice.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/25 13:17:52 by lpolizzi          #+#    #+#             */
-/*   Updated: 2025/09/25 13:23:39 by lpolizzi         ###   ########.fr       */
+/*   Updated: 2025/09/28 17:28:20 by lpolizzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 static bool	send_ping()
 {
-	static int	sequence = 0;
+	static int	sequence = 1;
 
 	if (data.opts.count > 0 && data.packinfo.nb_send >= data.opts.count)
 	{
@@ -38,12 +38,17 @@ static bool	send_ping()
 
 static bool receive_ping()
 {
+	static bool seq_seen[MAXSEQ] = {0};
 	unsigned char	buf[1024];
 	struct sockaddr_in	sender;
 	socklen_t		sender_len = sizeof(sender);
 	ssize_t			bytes_received;
 	struct timeval	current;
 	struct timeval	diff;
+	struct ip *ip_hdr;
+	size_t ip_hdr_len;
+	struct icmp_hdr *icmp_hdr;
+	uint16_t	seq;
 
 	bytes_received = recvfrom(data.sockinfo.sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&sender, &sender_len);
 	if (bytes_received < 0)
@@ -54,9 +59,28 @@ static bool receive_ping()
 	}
 	gettimeofday(&current, NULL);
 	timersub(&current, &last_sent, &diff);
-	if (!(data.opts.opt_mask & OPT_QUIET))
-		fprintf(stdout, "%ld bytes from %s: icmp_seq=%d, time=%.2f ms\n", bytes_received, inet_ntoa(sender.sin_addr), data.packinfo.nb_send - 1, (diff.tv_sec * 1e3) + (diff.tv_usec / 1e3));
-	data.packinfo.nb_ok++;
+	ip_hdr = (struct ip *)buf;
+	ip_hdr_len = ip_hdr->ip_hl * 4;
+	if (bytes_received < (ssize_t)(ip_hdr_len + sizeof(struct icmp_hdr)))
+		return (false);
+	icmp_hdr = (struct icmp_hdr *)(buf + ip_hdr_len);
+	seq = ntohs(icmp_hdr->sequence);
+	if (seq < MAXSEQ)
+	{
+		if (seq_seen[seq])
+		{
+			data.packinfo.nb_dup++;
+			if (!(data.opts.opt_mask & OPT_QUIET))
+				fprintf(stdout, "%ld bytes from %s: icmp_seq=%u, time=%.2f ms (DUP!)\n", bytes_received, inet_ntoa(sender.sin_addr), seq, diff.tv_sec * 1e3 + diff.tv_usec / 1e3);
+		}
+		else
+		{
+			seq_seen[seq] = 1;
+			if (!(data.opts.opt_mask & OPT_QUIET))
+				fprintf(stdout, "%ld bytes from %s: icmp_seq=%d, time=%.2f ms\n", bytes_received, inet_ntoa(sender.sin_addr), seq, (diff.tv_sec * 1e3) + (diff.tv_usec / 1e3));
+		}
+		data.packinfo.nb_ok++;
+	}
 	add_rtt(diff);
 	return (true);
 }
@@ -78,6 +102,8 @@ void ping_loop(void)
     interval.tv_sec = 1;
     interval.tv_usec = 0;
     gettimeofday(&send_time, NULL);
+	for (int i = 0; i < data.opts.preload; i++)
+		send_ping();
     if (!send_ping())
         return;
     while (!stop)
@@ -118,5 +144,5 @@ void ping_loop(void)
     }
     if (!stop)
         sleep(data.opts.linger);
-    finish_stats();
+    ending_stats();
 }

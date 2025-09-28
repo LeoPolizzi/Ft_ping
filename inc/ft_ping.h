@@ -6,7 +6,7 @@
 /*   By: lpolizzi <lpolizzi@student.42nice.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/31 17:48:48 by lpolizzi          #+#    #+#             */
-/*   Updated: 2025/09/25 13:26:07 by lpolizzi         ###   ########.fr       */
+/*   Updated: 2025/09/28 17:40:08 by lpolizzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,10 +39,11 @@
 # define USAGE_MESSAGE "\
 \t-c, --count <count>\tStop after sending (and receiving) <count> ECHO_RESPONSE packets\n\
 \t-d, --debug\t\tSet the SO_DEBUG option on the socket being used\n\
+\t-l, --preload <N>\tSend <N> packets as fast as possible before waiting for replies\n\
 \t-n, --numeric\t\tNumeric output only (no symbolic name resolution)\n\
 \t-q, --quiet\t\tQuiet output (only summary lines shown)\n\
-\t-R, --route\t\tRecord route and display it on returned packets\n\
-\t-r, --ignore-routing\tBypass routing tables; send directly on attached network\n\
+\t-R, --route\t\tRecord route and display it on returned packets (Can cause responses to never be sent since this implementation is based on IPv4)\n\
+\t-r, --ignore-routing\tBypass routing tables; send directly on attached network (Can cause sento() errors since this implementation is based on IPv4)\n\
 \t-s, --size <packetsize>\tNumber of data bytes to send (default 56)\n\
 \t-v, --verbose\t\tVerbose output (other ICMP packets shown)\n\
 \t-w, --timeout <N>\tStop after <N> seconds\n\
@@ -52,6 +53,8 @@
 \t--usage\t\t\tDisplay a short usage message\n"
 
 # define SECOND_IN_USEC 1000000
+
+# define MAXSEQ 65535
 
 # define MAXIPLEN    60
 # define MAXICMPLEN  76
@@ -107,6 +110,7 @@ struct packinfo
 	struct icmp_packet *packet;
 	int nb_send;
 	int nb_ok;
+	int nb_dup;
 	struct timeval *min;
 	struct timeval *max;
 	struct timeval avg;
@@ -119,6 +123,7 @@ struct pingopts
 {
 	int count;							 // -c, --count
     int size;							 // -s, --size
+	int preload;                         // -p, --preload
     int timeout;						 // -w, --timeout
     int linger;						     // -W, --linger
 	int sock_flags;                      // Socket flags (SO_DEBUG, SO_DONTROUTE)
@@ -142,6 +147,6 @@ void ping_loop(void);
 void free_list(struct rtt_node **head);
 void sigint_handler(int signal MAYBE_UNUSED);
 void add_rtt(struct timeval rtt);
-void finish_stats();
+void ending_stats();
 
 #endif
