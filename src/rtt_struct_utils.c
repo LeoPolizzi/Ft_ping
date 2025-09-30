@@ -61,7 +61,7 @@ void add_rtt(struct timeval rtt)
 	double mdev_ms = data.packinfo.mdev.tv_sec * 1000.0 + data.packinfo.mdev.tv_usec / 1000.0;
 	mdev_ms = sqrt(((mdev_ms * mdev_ms * (data.packinfo.nb_ok - 1)) + (ms - avg_ms) * (ms - avg_ms)) / data.packinfo.nb_ok);
 	data.packinfo.avg.tv_sec = (time_t)(avg_ms / 1000.0);
-	data.packinfo.avg.tv_usec = (suseconds_t)((avg_ms - data.packinfo.avg.tv_sec * 1000.0) * 1000.0 + 0.5); // +0.5 to round
+	data.packinfo.avg.tv_usec = (suseconds_t)((avg_ms - data.packinfo.avg.tv_sec * 1000.0) * 1000.0 + 0.5);
 	data.packinfo.mdev.tv_sec = (time_t)(mdev_ms / 1000.0);
 	data.packinfo.mdev.tv_usec = (suseconds_t)((mdev_ms - data.packinfo.mdev.tv_sec * 1000.0) * 1000.0 + 0.5);
 }

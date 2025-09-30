@@ -6,7 +6,7 @@
 /*   By: lpolizzi <lpolizzi@student.42nice.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/31 17:48:48 by lpolizzi          #+#    #+#             */
-/*   Updated: 2025/09/28 17:40:08 by lpolizzi         ###   ########.fr       */
+/*   Updated: 2025/09/30 16:29:37 by lpolizzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@
 \t-l, --preload <N>\tSend <N> packets as fast as possible before waiting for replies\n\
 \t-n, --numeric\t\tNumeric output only (no symbolic name resolution)\n\
 \t-q, --quiet\t\tQuiet output (only summary lines shown)\n\
-\t-R, --route\t\tRecord route and display it on returned packets (Can cause responses to never be sent since this implementation is based on IPv4)\n\
+\t-R, --route\t\tRecord route and display it on returned packets (Can cause responses to never be received since this implementation is based on IPv4)\n\
 \t-r, --ignore-routing\tBypass routing tables; send directly on attached network (Can cause sento() errors since this implementation is based on IPv4)\n\
 \t-s, --size <packetsize>\tNumber of data bytes to send (default 56)\n\
 \t-v, --verbose\t\tVerbose output (other ICMP packets shown)\n\
@@ -72,8 +72,8 @@
 extern struct pingdata data;
 extern volatile bool stop;
 extern struct timeval last_sent, start_time;
-
 extern char *prog_name;
+extern bool first_received;
 
 struct icmp_hdr
 {

@@ -6,7 +6,7 @@
 /*   By: lpolizzi <lpolizzi@student.42nice.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/25 13:17:52 by lpolizzi          #+#    #+#             */
-/*   Updated: 2025/09/28 17:28:20 by lpolizzi         ###   ########.fr       */
+/*   Updated: 2025/09/30 16:29:17 by lpolizzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,13 +71,23 @@ static bool receive_ping()
 		{
 			data.packinfo.nb_dup++;
 			if (!(data.opts.opt_mask & OPT_QUIET))
-				fprintf(stdout, "%ld bytes from %s: icmp_seq=%u, time=%.2f ms (DUP!)\n", bytes_received, inet_ntoa(sender.sin_addr), seq, diff.tv_sec * 1e3 + diff.tv_usec / 1e3);
+				fprintf(stdout, "%ld bytes from ", bytes_received);
+			if (!(data.opts.opt_mask & OPT_NUMERIC))
+				fprintf(stdout, "%s (%s): ", data.sockinfo.hostname, inet_ntoa(sender.sin_addr));
+			else
+				fprintf(stdout, "%s: ", inet_ntoa(sender.sin_addr));
+			fprintf(stdout, "icmp_seq=%d, time=%.2f ms (DUP!)\n", seq, (diff.tv_sec * 1e3) + (diff.tv_usec / 1e3));
 		}
 		else
 		{
 			seq_seen[seq] = 1;
 			if (!(data.opts.opt_mask & OPT_QUIET))
-				fprintf(stdout, "%ld bytes from %s: icmp_seq=%d, time=%.2f ms\n", bytes_received, inet_ntoa(sender.sin_addr), seq, (diff.tv_sec * 1e3) + (diff.tv_usec / 1e3));
+				fprintf(stdout, "%ld bytes from ", bytes_received);
+			if (!(data.opts.opt_mask & OPT_NUMERIC))
+				fprintf(stdout, "%s (%s): ", data.sockinfo.hostname, inet_ntoa(sender.sin_addr));
+			else
+				fprintf(stdout, "%s: ", inet_ntoa(sender.sin_addr));
+			fprintf(stdout, "icmp_seq=%d, time=%.2f ms\n", seq, (diff.tv_sec * 1e3) + (diff.tv_usec / 1e3));
 		}
 		data.packinfo.nb_ok++;
 	}
@@ -87,41 +97,36 @@ static bool receive_ping()
 
 void ping_loop(void)
 {
-    struct timeval timeout;
+    struct timeval send_time, now, elapsed, wait, timeout;
     fd_set readfds;
-    struct timeval send_time, now, elapsed;
-    struct timeval interval;
+    int ret;
+
     signal(SIGINT, sigint_handler);
-    gettimeofday(&start_time, NULL);
-    last_sent = start_time;
+	gettimeofday(&last_sent, NULL);
     fprintf(stdout, "PING %s (%s) %d(%ld) bytes of data.\n",
         data.sockinfo.hostname,
         data.sockinfo.ip_str,
         (int)(sizeof(data.packinfo.packet->hdr) + data.opts.size - 8),
         (long)(sizeof(data.packinfo.packet->hdr) + data.opts.size + 28));
-    interval.tv_sec = 1;
-    interval.tv_usec = 0;
     gettimeofday(&send_time, NULL);
-	for (int i = 0; i < data.opts.preload; i++)
-		send_ping();
+    for (int i = 0; i < data.opts.preload; i++)
+        send_ping();
     if (!send_ping())
-        return;
+	{
+		return;
+	}
+	if (data.opts.timeout > 0)
+	{
+		gettimeofday(&timeout, NULL);
+		timeout.tv_sec += data.opts.timeout;
+	}
     while (!stop)
     {
         FD_ZERO(&readfds);
         FD_SET(data.sockinfo.sockfd, &readfds);
-        gettimeofday(&now, NULL);
-        timersub(&send_time, &now, &elapsed);
-        timeout.tv_sec = interval.tv_sec - elapsed.tv_sec;
-        timeout.tv_usec = interval.tv_usec - elapsed.tv_usec;
-        if (timeout.tv_usec < 0)
-        {
-            timeout.tv_usec += 1000000;
-            timeout.tv_sec--;
-        }
-        if (timeout.tv_sec < 0)
-            timeout.tv_sec = timeout.tv_usec = 0;
-        int ret = select(data.sockinfo.sockfd + 1, &readfds, NULL, NULL, &timeout);
+        wait.tv_sec = 1;
+        wait.tv_usec = 0;
+        ret = select(data.sockinfo.sockfd + 1, &readfds, NULL, NULL, &wait);
         if (ret < 0)
         {
             if (errno != EINTR)
@@ -134,15 +139,42 @@ void ping_loop(void)
         if (ret > 0 && FD_ISSET(data.sockinfo.sockfd, &readfds))
             receive_ping();
         gettimeofday(&now, NULL);
+		if (data.opts.timeout > 0 && timercmp(&now, &timeout, >=))
+			break;
         timersub(&now, &send_time, &elapsed);
-        if (elapsed.tv_sec >= interval.tv_sec)
+        if (elapsed.tv_sec >= 1)
         {
             gettimeofday(&send_time, NULL);
             if (!send_ping())
                 break;
+			if (first_received == false)
+			{
+				gettimeofday(&start_time, NULL);
+				first_received = true;
+			}
+        }
+        if (data.opts.count > 0 && data.packinfo.nb_send >= data.opts.count)
+            break;
+    }
+    if (data.opts.linger > 0 && !stop)
+    {
+        struct timeval linger_elapsed;
+        gettimeofday(&now, NULL);
+        timersub(&now, &last_sent, &linger_elapsed);
+        while (linger_elapsed.tv_sec < data.opts.linger)
+        {
+            if (data.opts.count > 0 && data.packinfo.nb_ok >= data.opts.count)
+                break;
+            FD_ZERO(&readfds);
+            FD_SET(data.sockinfo.sockfd, &readfds);
+            wait.tv_sec = data.opts.linger - linger_elapsed.tv_sec;
+            wait.tv_usec = 0;
+            ret = select(data.sockinfo.sockfd + 1, &readfds, NULL, NULL, &wait);
+            if (ret > 0 && FD_ISSET(data.sockinfo.sockfd, &readfds))
+                receive_ping();
+            gettimeofday(&now, NULL);
+            timersub(&now, &last_sent, &linger_elapsed);
         }
     }
-    if (!stop)
-        sleep(data.opts.linger);
     ending_stats();
 }
