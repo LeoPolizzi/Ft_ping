@@ -31,17 +31,24 @@ OBJS = $(SRCS:.c=.o)
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(NAME) $(LDFLAGS)
+	@echo "$(YELLOW)Compiling $(NAME)...$(NC)"
+	@$(CC) $(CFLAGS) $(OBJS) -o $(NAME) $(LDFLAGS)
+	@echo "$(GREEN)$(NAME) compiled successfully!$(NC)"
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS)
+	@echo "$(YELLOW)Cleaning object files...$(NC)"
+	@rm -f $(OBJS)
+	@echo "$(GREEN)Object files cleaned!$(NC)"
 
 fclean: clean
-	rm -f $(NAME)
+	@echo "$(YELLOW)Removing $(NAME)...$(NC)"
+	@rm -f $(NAME)
+	@echo "$(GREEN)$(NAME) removed!$(NC)"
 
-re: fclean all
+re: fclean
+	@$(MAKE) all
 
 .PHONY: all clean fclean re
