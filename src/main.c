@@ -13,7 +13,7 @@
 #include "ft_ping.h"
 
 struct pingdata	data;
-struct timeval last_sent = {0, 0}, start_time = {0, 0};
+struct timeval last_sent = {0, 0}, start_time = {0, 0}, end_time = {0, 0};
 volatile bool	stop = false;
 char *prog_name = NULL;
 bool first_received = false;
@@ -42,10 +42,9 @@ void	help_message(char *prog_name)
 
 void ending_stats()
 {
-    struct timeval end_time, diff;
-    gettimeofday(&end_time, NULL);
+    struct timeval diff;
     if (data.packinfo.nb_send > 1)
-        timersub(&end_time, &start_time, &diff);
+		timersub(&end_time, &start_time, &diff);
     else
         diff.tv_sec = diff.tv_usec = 0;
     fflush(stdout);

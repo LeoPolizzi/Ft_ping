@@ -71,7 +71,7 @@
 
 extern struct pingdata data;
 extern volatile bool stop;
-extern struct timeval last_sent, start_time;
+extern struct timeval last_sent, start_time, end_time;
 extern char *prog_name;
 extern bool first_received;
 

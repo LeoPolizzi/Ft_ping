@@ -29,7 +29,8 @@ static bool	send_ping()
 		free(data.packinfo.packet);
 		return (false);
 	}
-	gettimeofday(&last_sent, NULL);
+	gettimeofday(&end_time, NULL);
+	last_sent = end_time;
 	free(data.packinfo.packet);
 	data.packinfo.nb_send++;
 	sequence++;
@@ -71,24 +72,33 @@ static bool receive_ping()
 		{
 			data.packinfo.nb_dup++;
 			if (!(data.opts.opt_mask & OPT_QUIET))
+			{
 				fprintf(stdout, "%ld bytes from ", bytes_received);
-			if (!(data.opts.opt_mask & OPT_NUMERIC))
-				fprintf(stdout, "%s (%s): ", data.sockinfo.hostname, inet_ntoa(sender.sin_addr));
-			else
-				fprintf(stdout, "%s: ", inet_ntoa(sender.sin_addr));
-			fprintf(stdout, "icmp_seq=%d, time=%.2f ms (DUP!)\n", seq, (diff.tv_sec * 1e3) + (diff.tv_usec / 1e3));
+				if (!(data.opts.opt_mask & OPT_NUMERIC))
+					fprintf(stdout, "%s (%s): ", data.sockinfo.hostname, inet_ntoa(sender.sin_addr));
+				else
+					fprintf(stdout, "%s: ", inet_ntoa(sender.sin_addr));
+				fprintf(stdout, "icmp_seq=%d", seq);
+				if (data.opts.size > 15)
+					fprintf (stdout, ", time=%.2f ms", (diff.tv_sec * 1e3) + (diff.tv_usec / 1e3));
+				fprintf(stdout, " (DUP!)\n");
+			}
 		}
 		else
 		{
 			seq_seen[seq] = 1;
 			if (!(data.opts.opt_mask & OPT_QUIET))
+			{
 				fprintf(stdout, "%ld bytes from ", bytes_received);
-			if (!(data.opts.opt_mask & OPT_NUMERIC))
-				fprintf(stdout, "%s (%s): ", data.sockinfo.hostname, inet_ntoa(sender.sin_addr));
-			else
-				fprintf(stdout, "%s: ", inet_ntoa(sender.sin_addr));
-			fprintf(stdout, "icmp_seq=%d, time=%.2f ms\n", seq, (diff.tv_sec * 1e3) + (diff.tv_usec / 1e3));
-		}
+				if (!(data.opts.opt_mask & OPT_NUMERIC))
+					fprintf(stdout, "%s (%s): ", data.sockinfo.hostname, inet_ntoa(sender.sin_addr));
+				else
+					fprintf(stdout, "%s: ", inet_ntoa(sender.sin_addr));
+				fprintf(stdout, "icmp_seq=%d", seq);
+				if (data.opts.size > 15)
+					fprintf (stdout, ", time=%.2f ms", (diff.tv_sec * 1e3) + (diff.tv_usec / 1e3));
+			}
+}
 		data.packinfo.nb_ok++;
 	}
 	add_rtt(diff);
@@ -102,12 +112,12 @@ void ping_loop(void)
     int ret;
 
     signal(SIGINT, sigint_handler);
-	gettimeofday(&last_sent, NULL);
-    fprintf(stdout, "PING %s (%s) %d(%ld) bytes of data.\n",
+	gettimeofday(&start_time, NULL);
+	last_sent = start_time;
+    fprintf(stdout, "PING %s (%s) %d bytes of data.\n",
         data.sockinfo.hostname,
         data.sockinfo.ip_str,
-        (int)(sizeof(data.packinfo.packet->hdr) + data.opts.size - 8),
-        (long)(sizeof(data.packinfo.packet->hdr) + data.opts.size + 28));
+        (int)(sizeof(data.packinfo.packet->hdr) + data.opts.size - 8));
     gettimeofday(&send_time, NULL);
     for (int i = 0; i < data.opts.preload; i++)
         send_ping();
@@ -147,11 +157,6 @@ void ping_loop(void)
             gettimeofday(&send_time, NULL);
             if (!send_ping())
                 break;
-			if (first_received == false)
-			{
-				gettimeofday(&start_time, NULL);
-				first_received = true;
-			}
         }
         if (data.opts.count > 0 && data.packinfo.nb_send >= data.opts.count)
             break;
