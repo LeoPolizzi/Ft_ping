@@ -1,6 +1,3 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
-
 Vagrant.configure("2") do |config|
   # Use the Bento Debian 7.11 box
   config.vm.box = "bento/debian-7.11"
@@ -14,21 +11,21 @@ Vagrant.configure("2") do |config|
 
   # Configure SSH
   config.ssh.username = "vagrant"
-  config.ssh.password = "vagrant"  # Bento boxes allow vagrant login
+  config.ssh.password = "vagrant"
   config.ssh.insert_key = true
 
-  # Provisioning: install inetutils (ping) version 2.0.0
+  # Provisioning: install inetutils (ping) version 2.0.0 from GNU
   config.vm.provision "shell", inline: <<-SHELL
-    echo "Updating APT..."
+    echo "Updating APT to archive.debian.org..."
     sudo sed -i 's|http://.*debian.org|http://archive.debian.org/debian|g' /etc/apt/sources.list
     sudo apt-get update -o Acquire::Check-Valid-Until=false -y
 
     echo "Installing build dependencies..."
     sudo apt-get install -y build-essential wget
 
-    echo "Downloading inetutils 2.0..."
-    wget http://ftp.de.debian.org/debian/pool/main/i/inetutils/inetutils_2.0.orig.tar.gz
-    tar xzf inetutils_2.0.orig.tar.gz
+    echo "Downloading GNU inetutils 2.0..."
+    wget https://ftp.gnu.org/gnu/inetutils/inetutils-2.0.tar.gz
+    tar xzf inetutils-2.0.tar.gz
     cd inetutils-2.0
     ./configure
     make
