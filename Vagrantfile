@@ -1,29 +1,31 @@
 Vagrant.configure("2") do |config|
-  # Use the Bento Debian 7.11 box
+
   config.vm.box = "bento/debian-7.11"
 
-  # Optional: set VM name and memory
   config.vm.provider "virtualbox" do |vb|
     vb.name = "debian7-vm"
     vb.memory = "1024"
     vb.cpus = 1
   end
 
-  # Configure SSH
   config.ssh.username = "vagrant"
   config.ssh.password = "vagrant"
   config.ssh.insert_key = true
 
-  # Provisioning: install inetutils (ping) version 2.0.0 from GNU
   config.vm.provision "shell", inline: <<-SHELL
-    echo "Updating APT to archive.debian.org..."
+    BLUE='\\033[0;34m'
+    YELLOW='\\033[1;33m'
+    MAGENTA='\\033[0;35m'
+    NC='\\033[0m'
+
+    echo -e "${BLUE}Updating APT to archive.debian.org...${NC}"
     sudo sed -i 's|http://.*debian.org|http://archive.debian.org/debian|g' /etc/apt/sources.list
     sudo apt-get update -o Acquire::Check-Valid-Until=false -y
 
-    echo "Installing build dependencies..."
+    echo -e "${YELLOW}Installing build dependencies...${NC}"
     sudo apt-get install -y build-essential wget
 
-    echo "Downloading GNU inetutils 2.0..."
+    echo -e "${MAGENTA}Downloading GNU inetutils 2.0...${NC}"
     wget https://ftp.gnu.org/gnu/inetutils/inetutils-2.0.tar.gz
     tar xzf inetutils-2.0.tar.gz
     cd inetutils-2.0
@@ -31,7 +33,7 @@ Vagrant.configure("2") do |config|
     make
     sudo make install
 
-    echo "Cleaning up..."
+    echo -e "${BLUE}Cleaning up...${NC}"
     cd ..
     rm -rf inetutils-2.0*
   SHELL

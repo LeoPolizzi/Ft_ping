@@ -47,6 +47,9 @@ fclean: clean
 	@echo "$(YELLOW)Removing $(NAME)...$(NC)"
 	@rm -f $(NAME)
 	@echo "$(GREEN)$(NAME) removed!$(NC)"
+	@echo "$(YELLOW)Cleaning Vagrant artifacts...$(NC)"
+	@rm -rf .vagrant && vagrant halt && VBoxManage controlvm "debian7-vm" poweroff && VBoxManage unregistervm "debian7-vm" --delete
+	@echo "$(GREEN)Vagrant artifacts cleaned!$(NC)"
 
 re: fclean
 	@$(MAKE) all
