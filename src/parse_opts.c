@@ -22,6 +22,7 @@ static const struct option ping_longopts[] = {
 	{"ignore-routing",NO_ARG,       0, 'r'},
 	{"route",         NO_ARG,       0, 'R'},
 	{"size",          REQ_ARG,		0, 's'},
+	{"ttl",           REQ_ARG,		0, L_OPT_TTL},
     {"verbose",       NO_ARG,       0, 'v'},
 	{"version",       NO_ARG,       0, 'V'},
     {"timeout",       REQ_ARG,		0, 'w'},
@@ -58,7 +59,7 @@ void parse_opts(int ac, char **av)
 {
     int c;
 
-    while ((c = ft_getopt(ac, av, "dnqrRvV?c:l:s:w:W:", ping_longopts, NULL, false)) != -1)
+    while ((c = ft_getopt(ac, av, "+dnqrRvV?c:l:s:w:W:", ping_longopts, NULL, false)) != -1)
     {
         switch (c)
         {
@@ -84,10 +85,18 @@ void parse_opts(int ac, char **av)
 			data.opts.count = ping_convert_number(g_optarg, 0, true);
 			break;
 		case ('l'):
+			if (!is_root)
+			{
+				fprintf(stderr, "%s: error: --preload option is available only to superuser.\n", prog_name);
+				stop_ping(EXIT_FAILURE);
+			}
 			data.opts.preload = ping_convert_number(g_optarg, 1000, true);
 			break;
 		case ('s'):
 			data.opts.size = ping_convert_number(g_optarg, PING_MAX_DATA_LEN, true);
+			break;
+		case (L_OPT_TTL):
+			data.opts.ttl = ping_convert_number(g_optarg, 255, false);
 			break;
         case ('w'):
             data.opts.timeout = ping_convert_number(g_optarg, INT_MAX, true);
@@ -96,11 +105,11 @@ void parse_opts(int ac, char **av)
             data.opts.linger = ping_convert_number(g_optarg, INT_MAX, true);
             break;
 		case ('V'):
-			printf("ft_ping version %s\n", VERSION);
+			printf("ft_ping %s\n\nWritten by lpolizzi.\n", VERSION);
 			stop_ping(EXIT_SUCCESS);
 			break;
 		case (L_OPT_USAGE):
-		   fprintf(stderr, "Usage:\n\t%s [options] <host>\n", av[0]);
+		   fprintf(stderr, "Usage: %s " USAGE, av[0]);
 		   stop_ping(EXIT_SUCCESS);
 		   break;
         case ('?'):

@@ -30,7 +30,7 @@ bool init_socket(char *prog_name)
                 return (false);
             }
 			else if (data.opts.opt_mask & OPT_VERBOSE)
-					fprintf(stderr, "%s: sock4.fd: %d (socktype: SOCK_DGRAM), sock6.fd: Not Implemented, ", prog_name, data.sockinfo.sockfd);
+				fprintf(stderr, "%s: sock4.fd: %d (socktype: SOCK_DGRAM), sock6.fd: Not Implemented, ", prog_name, data.sockinfo.sockfd);
         }
         else
         {
@@ -39,13 +39,15 @@ bool init_socket(char *prog_name)
         }
     }
 	else if (data.opts.opt_mask & OPT_VERBOSE)
-   			fprintf(stderr, "%s: sock4.fd: %d (socktype: SOCK_RAW), sock6.fd: Not Implemented, ", prog_name, data.sockinfo.sockfd);
+   		fprintf(stderr, "%s: sock4.fd: %d (socktype: SOCK_RAW), sock6.fd: Not Implemented, ", prog_name, data.sockinfo.sockfd);
 	if (data.opts.sock_flags != 0)
+    {
         if (setsockopt(data.sockinfo.sockfd, SOL_SOCKET, data.opts.sock_flags, &one, sizeof(one)) < 0)
         {
             fprintf(stderr, "%s: setsockopt SO_*: %s\n", prog_name, strerror(errno));
             return (false);
         }
+    }
     if (data.opts.timeout != 0)
     {
         struct timeval timeout;
@@ -66,6 +68,15 @@ bool init_socket(char *prog_name)
 		if (setsockopt(data.sockinfo.sockfd, IPPROTO_IP, IP_OPTIONS, rspace, sizeof (rspace)) < 0)
 		{
 			fprintf(stderr, "%s: setsockopt IP_OPTIONS: %s\n", prog_name, strerror(errno));
+			return (false);
+		}
+	}
+	if (data.opts.ttl > 0)
+	{
+		int ttl = data.opts.ttl;
+		if (setsockopt(data.sockinfo.sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0)
+		{
+			fprintf(stderr, "%s: setsockopt IP_TTL: %s\n", prog_name, strerror(errno));
 			return (false);
 		}
 	}

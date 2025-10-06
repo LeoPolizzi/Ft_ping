@@ -36,21 +36,44 @@
 
 # define VERSION "1.0.0"
 
-# define USAGE_MESSAGE "\
-\t-c, --count <count>\tStop after sending (and receiving) <count> ECHO_RESPONSE packets\n\
-\t-d, --debug\t\tSet the SO_DEBUG option on the socket being used\n\
-\t-l, --preload <N>\tSend <N> packets as fast as possible before waiting for replies\n\
-\t-n, --numeric\t\tNumeric output only (no symbolic name resolution)\n\
-\t-q, --quiet\t\tQuiet output (only summary lines shown)\n\
-\t-R, --route\t\tRecord route and display it on returned packets (Can cause responses to never be received since this implementation is based on IPv4)\n\
-\t-r, --ignore-routing\tBypass routing tables; send directly on attached network (Can cause sento() errors since this implementation is based on IPv4)\n\
-\t-s, --size <packetsize>\tNumber of data bytes to send (default 56)\n\
-\t-v, --verbose\t\tVerbose output (other ICMP packets shown)\n\
-\t-w, --timeout <N>\tStop after <N> seconds\n\
-\t-W, --linger <N>\tNumber of seconds to wait for response\n\
-\t-?, --help\t\tDisplay this help message\n\
-\t-V, --version\t\tPrint program version\n\
-\t--usage\t\t\tDisplay a short usage message\n"
+# define USAGE "\
+[-dnrvqR?V] [-c NUMBER] [-w N] [-W N] [-l NUMBER] [-s NUMBER]\n\
+\t\t [--count=NUMBER] [--debug] [--numeric] [--ignore-routing] [--ttl=N]\n\
+\t\t [--verbose] [--timeout=N] [--linger=N] [--preload=NUMBER]\n\
+\t\t [--quiet] [--route] [--size=NUMBER] [--help] [--usage] [--version]\n\
+\t\t HOST ...\n\
+"
+
+# define HELP_MESSAGE "\
+Send ICMP ECHO_REQUEST packets to network hosts.\n\
+\n\
+Options:\n\
+\n\
+\t-c, --count=NUMBER         stop after sending NUMBER packets\n\
+\t-d, --debug                set the SO_DEBUG option\n\
+\t-n, --numeric              do not resolve host addresses\n\
+\t-r, --ignore-routing       send directly to a host on an attached network\n\
+\t--ttl=N                    specify N as time-to-live\n\
+\t-v, --verbose              verbose output\n\
+\t-w, --timeout=N            stop after N seconds\n\
+\t-W, --linger=N             number of seconds to wait for response\n\
+\n\
+\t-l, --preload=NUMBER       send NUMBER packets as fast as possible before\n\
+\t                           falling into normal mode of behavior (root only)\n\
+\t-q, --quiet                quiet output\n\
+\t-R, --route                record route\n\
+\t-s, --size=NUMBER          send NUMBER data octets\n\
+\n\
+\t-?, --help                 give this help list\n\
+\t--usage                    give a short usage message\n\
+\t-V, --version              print program version\n\
+\n\
+Mandatory or optional arguments to long options are also mandatory or optional\n\
+for any corresponding short options.\n\
+\n\
+Options marked with (root only) are available only to superuser.\n\
+\n\
+Report bugs to <lpolizzi@student.42nice.fr>.\n"
 
 # define SECOND_IN_USEC 1000000
 
@@ -62,7 +85,8 @@
 # define PING_DEFAULT_DATA_LEN 56
 # define PING_MAX_DATA_LEN (65507 - MAXIPLEN - MAXICMPLEN)
 
-# define L_OPT_USAGE 1
+# define L_OPT_USAGE	1
+# define L_OPT_TTL		2
 
 # define OPT_NUMERIC     0x001
 # define OPT_QUIET       0x002
@@ -73,7 +97,7 @@ extern struct pingdata data;
 extern volatile bool stop;
 extern struct timeval last_sent, start_time, end_time;
 extern char *prog_name;
-extern bool first_received;
+extern bool is_root;
 
 struct icmp_hdr
 {
@@ -121,13 +145,14 @@ struct packinfo
 
 struct pingopts
 {
-	int count;							 // -c, --count
-    int size;							 // -s, --size
-	int preload;                         // -p, --preload
-    int timeout;						 // -w, --timeout
-    int linger;						     // -W, --linger
-	int sock_flags;                      // Socket flags (SO_DEBUG, SO_DONTROUTE)
-	int opt_mask;                        // Bitmask for options
+	int count;							// -c, --count
+    int size;							// -s, --size
+	int preload;						// -p, --preload
+	int ttl;							// -t, --ttl
+    int timeout;						// -w, --timeout
+    int linger;							// -W, --linger
+	int sock_flags;					    // Socket flags (SO_DEBUG, SO_DONTROUTE)
+	int opt_mask;					    // Bitmask for options
 };
 
 struct pingdata

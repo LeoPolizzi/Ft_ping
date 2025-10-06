@@ -39,70 +39,81 @@ static bool	send_ping()
 
 static bool receive_ping()
 {
-	static bool seq_seen[MAXSEQ] = {0};
-	unsigned char	buf[1024];
-	struct sockaddr_in	sender;
-	socklen_t		sender_len = sizeof(sender);
-	ssize_t			bytes_received;
-	struct timeval	current;
-	struct timeval	diff;
-	struct ip *ip_hdr;
-	size_t ip_hdr_len;
-	struct icmp_hdr *icmp_hdr;
-	uint16_t	seq;
+    static bool seq_seen[MAXSEQ] = {0};
+    unsigned char buf[1024];
+    struct sockaddr_in sender;
+    socklen_t sender_len = sizeof(sender);
+    ssize_t bytes_received;
+    struct timeval current, diff;
+    struct ip *ip_hdr;
+    size_t ip_hdr_len;
+    struct icmp_hdr *icmp_hdr;
+    uint16_t seq = 0;
+    int ttl;
 
-	bytes_received = recvfrom(data.sockinfo.sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&sender, &sender_len);
-	if (bytes_received < 0)
-	{
-		if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
-			fprintf(stderr, "%s: recvfrom: %s\n", prog_name, strerror(errno));
-		return (false);
-	}
-	gettimeofday(&current, NULL);
-	timersub(&current, &last_sent, &diff);
-	ip_hdr = (struct ip *)buf;
-	ip_hdr_len = ip_hdr->ip_hl * 4;
-	if (bytes_received < (ssize_t)(ip_hdr_len + sizeof(struct icmp_hdr)))
-		return (false);
-	icmp_hdr = (struct icmp_hdr *)(buf + ip_hdr_len);
-	seq = ntohs(icmp_hdr->sequence);
-	if (seq < MAXSEQ)
-	{
-		if (seq_seen[seq])
-		{
-			data.packinfo.nb_dup++;
-			if (!(data.opts.opt_mask & OPT_QUIET))
-			{
-				fprintf(stdout, "%ld bytes from ", bytes_received);
-				if (!(data.opts.opt_mask & OPT_NUMERIC))
-					fprintf(stdout, "%s (%s): ", data.sockinfo.hostname, inet_ntoa(sender.sin_addr));
-				else
-					fprintf(stdout, "%s: ", inet_ntoa(sender.sin_addr));
-				fprintf(stdout, "icmp_seq=%d", seq);
-				if (data.opts.size > 15)
-					fprintf (stdout, ", time=%.2f ms", (diff.tv_sec * 1e3) + (diff.tv_usec / 1e3));
-				fprintf(stdout, " (DUP!)\n");
-			}
-		}
-		else
-		{
-			seq_seen[seq] = 1;
-			if (!(data.opts.opt_mask & OPT_QUIET))
-			{
-				fprintf(stdout, "%ld bytes from ", bytes_received);
-				if (!(data.opts.opt_mask & OPT_NUMERIC))
-					fprintf(stdout, "%s (%s): ", data.sockinfo.hostname, inet_ntoa(sender.sin_addr));
-				else
-					fprintf(stdout, "%s: ", inet_ntoa(sender.sin_addr));
-				fprintf(stdout, "icmp_seq=%d", seq);
-				if (data.opts.size > 15)
-					fprintf (stdout, ", time=%.2f ms", (diff.tv_sec * 1e3) + (diff.tv_usec / 1e3));
-			}
-}
-		data.packinfo.nb_ok++;
-	}
-	add_rtt(diff);
-	return (true);
+    bytes_received = recvfrom(data.sockinfo.sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&sender, &sender_len);
+    if (bytes_received < 0)
+    {
+        if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
+            fprintf(stderr, "%s: recvfrom: %s\n", prog_name, strerror(errno));
+        return false;
+    }
+    gettimeofday(&current, NULL);
+    timersub(&current, &last_sent, &diff);
+    ip_hdr = (struct ip *)buf;
+    ip_hdr_len = ip_hdr->ip_hl * 4;
+    if (bytes_received < (ssize_t)(ip_hdr_len + sizeof(struct icmp_hdr)))
+        return false;
+    icmp_hdr = (struct icmp_hdr *)(buf + ip_hdr_len);
+    ttl = ip_hdr->ip_ttl;
+    switch (icmp_hdr->type)
+    {
+        case ICMP_ECHOREPLY:
+            seq = ntohs(icmp_hdr->sequence);
+            if (seq < MAXSEQ)
+            {
+                if (seq_seen[seq])
+                    data.packinfo.nb_dup++;
+                if (!(data.opts.opt_mask & OPT_QUIET))
+                {
+                    fprintf(stdout, "%ld bytes from %s: icmp_seq=%d ttl=%d",
+                            bytes_received - ip_hdr_len,
+                            inet_ntoa(sender.sin_addr),
+                            seq, ttl);
+                    if (data.opts.size > 15)
+                        fprintf(stdout, ", time=%.2f ms", diff.tv_sec * 1e3 + diff.tv_usec / 1e3);
+                    fprintf(stdout, "%s\n", seq_seen[seq] ? " (DUP!)" : "");
+                }
+            }
+            break;
+        case ICMP_TIME_EXCEEDED:
+        {
+            struct ip *inner_ip = (struct ip *)(buf + ip_hdr_len + sizeof(struct icmp_hdr));
+            struct icmp_hdr *inner_icmp = NULL;
+            if ((bytes_received - ip_hdr_len - sizeof(struct icmp_hdr)) >= sizeof(struct ip) + 8)
+            {
+                inner_icmp = (struct icmp_hdr *)((unsigned char *)inner_ip + inner_ip->ip_hl * 4);
+                seq = ntohs(inner_icmp->sequence);
+            }
+
+            if (!(data.opts.opt_mask & OPT_QUIET))
+            {
+                fprintf(stdout, "%ld bytes from %s: ICMP Time Exceeded (ttl expired)",
+                        bytes_received - ip_hdr_len,
+                        inet_ntoa(sender.sin_addr));
+                if (inner_icmp)
+                    fprintf(stdout, ", original ttl=%d, icmp_seq=%d", inner_ip->ip_ttl, seq);
+                fprintf(stdout, "\n");
+            }
+            break;
+        }
+        default:
+            break;
+    }
+	seq_seen[seq] = 1;
+	data.packinfo.nb_ok++;
+    add_rtt(diff);
+    return true;
 }
 
 void ping_loop(void)
@@ -117,7 +128,7 @@ void ping_loop(void)
     fprintf(stdout, "PING %s (%s) %d bytes of data.\n",
         data.sockinfo.hostname,
         data.sockinfo.ip_str,
-        (int)(sizeof(data.packinfo.packet->hdr) + data.opts.size - 8));
+        data.opts.size);
     gettimeofday(&send_time, NULL);
     for (int i = 0; i < data.opts.preload; i++)
         send_ping();

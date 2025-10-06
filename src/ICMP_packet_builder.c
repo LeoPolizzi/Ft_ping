@@ -53,4 +53,3 @@ bool build_packet(uint16_t seq, struct icmp_packet **pack_ptr)
     *pack_ptr = packet;
     return (true);
 }
-

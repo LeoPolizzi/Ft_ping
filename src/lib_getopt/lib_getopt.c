@@ -48,11 +48,11 @@ int	ft_getopt_short(int argc, char **argv, const char *opt_string)
 	static int	j = 1;
 	short		type;
 
-	if (g_optind >= argc || !argv[g_optind] || argv[g_optind][0] != '-'
-		|| argv[g_optind][1] == '\0')
+	while (g_optind < argc && (!argv[g_optind] || argv[g_optind][0] != '-' || argv[g_optind][1] == '\0'))
+		g_optind++;
+	if (g_optind >= argc)
 		return (-1);
-	if (argv[g_optind][0] == '-' && argv[g_optind][1] == '-'
-		&& argv[g_optind][2] == '\0')
+	if (argv[g_optind][0] == '-' && argv[g_optind][1] == '-' && argv[g_optind][2] == '\0')
 	{
 		g_optind++;
 		return (-1);
@@ -114,7 +114,9 @@ int	ft_getopt_long(int argc, char **argv, const char *opt_string,
 	size_t	len;
 	int		ret;
 
-	if (g_optind >= argc || argv[g_optind] == NULL)
+	while (g_optind < argc && (argv[g_optind][0] != '-' || argv[g_optind][1] == '\0'))
+		g_optind++;
+	if (g_optind >= argc)
 		return (-1);
 	arg = argv[g_optind];
 	if (arg[0] == '-' && arg[1] == '-' && arg[2] == '\0')
