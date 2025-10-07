@@ -49,15 +49,15 @@ void ending_stats()
 	//       diff.tv_sec = diff.tv_usec = 0;
     fflush(stdout);
     fprintf(stdout, "--- %s ping statistics ---\n", data.sockinfo.hostname);
-    fprintf(stdout, "%d packets transmitted, %d received, ", data.packinfo.nb_send, data.packinfo.nb_ok);
+    fprintf(stdout, "%d packets transmitted, %d received, ", data.packinfo.nb_send, data.packinfo.nb_ok - data.packinfo.nb_dup);
     if (data.packinfo.nb_dup > 0)
         fprintf(stdout, "+%d duplicates, ", data.packinfo.nb_dup);
     if (data.packinfo.nb_send > 0)
     {
-        if (data.packinfo.nb_ok > data.packinfo.nb_send)
+        if (data.packinfo.nb_ok - data.packinfo.nb_dup > data.packinfo.nb_send)
             fprintf(stdout, "-- somebody is printing forged packets!\n");
 		else
-			fprintf(stdout, "%.0f%% packet loss\n", ((data.packinfo.nb_send - data.packinfo.nb_ok) / (double)data.packinfo.nb_send) * 100.0);
+			fprintf(stdout, "%.0f%% packet loss\n", ((data.packinfo.nb_send - (data.packinfo.nb_ok - data.packinfo.nb_dup)) / (double)data.packinfo.nb_send) * 100.0);
             // fprintf(stdout, "%.0f%% packet loss, time %.3fms\n", ((data.packinfo.nb_send - data.packinfo.nb_ok) / (double)data.packinfo.nb_send) * 100.0, (double)(diff.tv_sec * 1000 + diff.tv_usec / 1000));
     }
     if (data.packinfo.nb_ok > 0)
