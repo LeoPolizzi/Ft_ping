@@ -98,6 +98,7 @@ extern volatile bool stop;
 extern struct timeval last_sent, start_time, end_time;
 extern char *prog_name;
 extern bool is_root;
+extern int	icmp_id;
 
 struct icmp_hdr
 {

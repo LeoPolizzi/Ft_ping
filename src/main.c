@@ -17,6 +17,7 @@ struct timeval last_sent = {0, 0}, start_time = {0, 0}, end_time = {0, 0};
 volatile bool	stop = false;
 char *prog_name = NULL;
 bool is_root = false;
+int	icmp_id = 0;
 
 void	sigint_handler(int signal MAYBE_UNUSED)
 {
@@ -71,6 +72,7 @@ void ending_stats()
 int		main(int ac, char **av)
 {
 	prog_name = av[0];
+	icmp_id = getpid() & 0xFFFF;
 	is_root = (geteuid() == 0);
 	if (ac < 2)
 		return (help_message(av[0]), EXIT_FAILURE);

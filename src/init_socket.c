@@ -29,8 +29,6 @@ bool init_socket(char *prog_name)
                 fprintf(stderr, "%s: Lacking privilege for icmp socket.\n", prog_name);
                 return (false);
             }
-			else if (data.opts.opt_mask & OPT_VERBOSE)
-				fprintf(stderr, "%s: sock4.fd: %d (socktype: SOCK_DGRAM), sock6.fd: Not Implemented, ", prog_name, data.sockinfo.sockfd);
         }
         else
         {
@@ -38,8 +36,6 @@ bool init_socket(char *prog_name)
             return (false);
         }
     }
-	else if (data.opts.opt_mask & OPT_VERBOSE)
-   		fprintf(stderr, "%s: sock4.fd: %d (socktype: SOCK_RAW), sock6.fd: Not Implemented, ", prog_name, data.sockinfo.sockfd);
 	if (data.opts.sock_flags != 0)
     {
         if (setsockopt(data.sockinfo.sockfd, SOL_SOCKET, data.opts.sock_flags, &one, sizeof(one)) < 0)

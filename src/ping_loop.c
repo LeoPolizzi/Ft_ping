@@ -125,10 +125,12 @@ void ping_loop(void)
     signal(SIGINT, sigint_handler);
 	gettimeofday(&start_time, NULL);
 	last_sent = start_time;
-    fprintf(stdout, "PING %s (%s) %d bytes of data.\n",
+    fprintf(stdout, "PING %s (%s) %d data bytes\n",
         data.sockinfo.hostname,
         data.sockinfo.ip_str,
         data.opts.size);
+	if (data.opts.opt_mask & OPT_VERBOSE)
+		fprintf(stdout, ", id %x = %d\n", icmp_id, icmp_id);
     gettimeofday(&send_time, NULL);
     for (int i = 0; i < data.opts.preload; i++)
         send_ping();
