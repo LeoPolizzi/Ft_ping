@@ -24,7 +24,7 @@ SRCS =	src/main.c \
 		src/ping_loop.c \
 		src/rtt_struct_utils.c \
 		src/init_socket.c \
-		src/lib_getopt/lib_getopt.c \
+		src/ft_getopt/ft_getopt.c \
 
 OBJS = $(SRCS:.c=.o)
 

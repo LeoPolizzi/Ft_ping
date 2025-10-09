@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   lib_getopt.h                                       :+:      :+:    :+:   */
+/*   ft_getopt.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lpolizzi <lpolizzi@student.42nice.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,8 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef LIB_GETOPT_H
-# define LIB_GETOPT_H
+#ifndef FT_GETOPT_H
+# define FT_GETOPT_H
 
 # include <stdbool.h>
 # include <stddef.h>
