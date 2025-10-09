@@ -16,7 +16,7 @@ static bool	send_ping()
 {
 	static int	sequence = 1;
 
-	if (data.opts.count > 0 && data.packinfo.nb_send >= data.opts.count)
+	if (data.opts.count > 0 && data.packinfo.nb_send > data.opts.count)
 	{
 		stop = true;
 		return (true);
@@ -81,7 +81,7 @@ static bool receive_ping()
                             inet_ntoa(sender.sin_addr),
                             seq, ttl);
                     if (data.opts.size > 15)
-                        fprintf(stdout, ", time=%.2f ms", diff.tv_sec * 1e3 + diff.tv_usec / 1e3);
+                        fprintf(stdout, " time=%.3f ms", diff.tv_sec * 1e3 + diff.tv_usec / 1e3);
                     fprintf(stdout, "%s\n", seq_seen[seq] ? " (DUP!)" : "");
                 }
             }
@@ -102,7 +102,7 @@ static bool receive_ping()
                         bytes_received - ip_hdr_len,
                         inet_ntoa(sender.sin_addr));
                 if (inner_icmp)
-                    fprintf(stdout, ", original ttl=%d, icmp_seq=%d", inner_ip->ip_ttl, seq);
+                    fprintf(stdout, " original ttl=%d, icmp_seq=%d", inner_ip->ip_ttl, seq);
                 fprintf(stdout, "\n");
             }
             break;
