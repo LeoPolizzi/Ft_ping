@@ -130,7 +130,7 @@ void ping_loop(void)
         data.sockinfo.ip_str,
         data.opts.size, (data.opts.opt_mask & OPT_VERBOSE) ? "" : "\n");
 	if (data.opts.opt_mask & OPT_VERBOSE)
-		fprintf(stdout, ", id %x = %d\n", g_icmp_id, g_icmp_id);
+		fprintf(stdout, ", id 0x%x = %d\n", g_icmp_id, g_icmp_id);
     gettimeofday(&send_time, NULL);
     for (int i = 0; i < data.opts.preload; i++)
         send_ping();
