@@ -38,11 +38,6 @@ $(NAME): $(OBJS)
 %.o: %.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-up: vclean
-	@echo "$(YELLOW)Setting up Vagrant environment...$(NC)"
-	@vagrant up
-	@echo "$(GREEN)Vagrant environment is up and running!$(NC)"
-
 clean:
 	@echo "$(YELLOW)Cleaning object files...$(NC)"
 	@rm -f $(OBJS)
@@ -52,14 +47,6 @@ fclean: clean
 	@echo "$(YELLOW)Removing $(NAME)...$(NC)"
 	@rm -f $(NAME)
 	@echo "$(GREEN)$(NAME) removed!$(NC)"
-
-vclean:
-	@echo "$(YELLOW)Cleaning Vagrant artifacts...$(NC)"
-	@vagrant halt
-	@rm -rf .vagrant
-	@VBoxManage controlvm "debian7-vm" poweroff 2>/dev/null || true
-	@VBoxManage unregistervm "debian7-vm" --delete 2>/dev/null || true
-	@echo "$(GREEN)Vagrant artifacts cleaned!$(NC)"
 
 re: fclean
 	@$(MAKE) all
