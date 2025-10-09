@@ -33,7 +33,7 @@
 
 # define MAYBE_UNUSED __attribute__((unused))
 
-# define VERSION "1.0.0"
+# define VERSION "0.1.0"
 
 # define USAGE "\
 [-dnrvqR?V] [-c NUMBER] [-w N] [-W N] [-l NUMBER] [-s NUMBER]\n\

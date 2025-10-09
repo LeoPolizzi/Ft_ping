@@ -25,7 +25,7 @@ static bool	send_ping()
 		return (false);
 	if (sendto(data.sockinfo.sockfd, data.packinfo.packet, sizeof(data.packinfo.packet->hdr) + data.opts.size, 0, (struct sockaddr *)&data.sockinfo.addr, sizeof(data.sockinfo.addr)) <= 0)
 	{
-		fprintf(stderr, "%s: sendto: %s\n", prog_name, strerror(errno));
+		fprintf(stderr, "%s: sending packet: %s\n", prog_name, strerror(errno));
 		free(data.packinfo.packet);
 		return (false);
 	}
