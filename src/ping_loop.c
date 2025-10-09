@@ -16,7 +16,7 @@ static bool	send_ping()
 {
 	static int	sequence = 1;
 
-	if (data.opts.count > 0 && data.packinfo.nb_send > data.opts.count)
+	if (data.opts.count > 0 && data.packinfo.nb_send >= data.opts.count)
 	{
 		stop = true;
 		return (true);
@@ -159,6 +159,8 @@ void ping_loop(void)
         }
         if (ret > 0 && FD_ISSET(data.sockinfo.sockfd, &readfds))
             receive_ping();
+		if (data.opts.count > 0 && data.packinfo.nb_send >= data.opts.count)
+			break;
         gettimeofday(&now, NULL);
 		if (data.opts.timeout > 0 && timercmp(&now, &timeout, >=))
 			break;
@@ -169,8 +171,6 @@ void ping_loop(void)
             if (!send_ping())
                 break;
         }
-        if (data.opts.count > 0 && data.packinfo.nb_send >= data.opts.count)
-            break;
     }
     if (data.opts.linger > 0 && !stop)
     {
