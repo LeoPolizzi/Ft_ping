@@ -49,7 +49,7 @@ void ending_stats()
 	//       diff.tv_sec = diff.tv_usec = 0;
     fflush(stdout);
     fprintf(stdout, "--- %s ping statistics ---\n", data.sockinfo.hostname);
-    fprintf(stdout, "%d packets transmitted, %d received, ", data.packinfo.nb_send, data.packinfo.nb_ok - data.packinfo.nb_dup);
+    fprintf(stdout, "%d packets transmitted, %d packets received, ", data.packinfo.nb_send, data.packinfo.nb_ok - data.packinfo.nb_dup);
     if (data.packinfo.nb_dup > 0)
         fprintf(stdout, "+%d duplicates, ", data.packinfo.nb_dup);
     if (data.packinfo.nb_send > 0)
