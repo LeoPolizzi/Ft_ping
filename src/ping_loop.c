@@ -14,7 +14,7 @@
 
 static bool	send_ping()
 {
-	static int	sequence = 1;
+	static int	sequence = 0;
 
 	if (data.opts.count > 0 && data.packinfo.nb_send >= data.opts.count)
 	{
