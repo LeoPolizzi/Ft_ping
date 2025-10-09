@@ -33,8 +33,6 @@ bool	resolve_hostname(char *prog_name, char *hostname)
 		freeaddrinfo(res);
 		return (false);
 	}
-	if (data.opts.opt_mask & OPT_VERBOSE)
-		fprintf(stderr, "hints.ai_family: AF_INET\n%s: ai->ai_family: AF_INET, ai->ai_canonname: \'%s\'\n", prog_name, hostname);
 	freeaddrinfo(res);
 	return (true);
 }
