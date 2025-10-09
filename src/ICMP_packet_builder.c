@@ -41,7 +41,7 @@ bool build_packet(uint16_t seq, struct icmp_packet **pack_ptr)
         return false;
     packet->hdr.type     = ICMP_ECHO;
     packet->hdr.code     = 0;
-    packet->hdr.id       = htons(icmp_id);
+    packet->hdr.id       = htons(g_icmp_id);
     packet->hdr.sequence = htons(seq);
     struct timeval timestamp;
     gettimeofday(&timestamp, NULL);
