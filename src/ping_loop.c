@@ -12,7 +12,7 @@
 
 #include "ft_ping.h"
 
-static bool	send_ping()
+static bool	send_ping(void)
 {
 	static int	sequence = 0;
 
@@ -37,7 +37,7 @@ static bool	send_ping()
 	return (true);
 }
 
-static bool receive_ping()
+static bool receive_ping(void)
 {
     static bool seq_seen[MAXSEQ] = {0};
     unsigned char buf[1024];

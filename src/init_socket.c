@@ -12,7 +12,7 @@
 
 #include "ft_ping.h"
 
-bool init_socket(char *prog_name)
+bool	init_socket(void)
 {
     int one = 1;
 	char rspace[MAX_IPOPTLEN];

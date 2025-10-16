@@ -13,7 +13,7 @@
 #ifndef FT_PING_H
 # define FT_PING_H
 
-# include "lib_getopt.h"
+# include "ft_getopt.h"
 # include <arpa/inet.h>
 # include <errno.h>
 # include <fcntl.h>
@@ -23,6 +23,7 @@
 # include <netinet/in.h>
 # include <netinet/ip_icmp.h>
 # include <signal.h>
+#include <stdint.h>
 # include <stdio.h>
 # include <stdlib.h>
 # include <string.h>
@@ -97,7 +98,7 @@ extern volatile bool	stop;
 extern struct timeval	last_sent, start_time, end_time;
 extern char				*prog_name;
 extern bool				is_root;
-extern int				g_icmp_id;
+extern uint16_t			g_icmp_id;
 
 struct					icmp_hdr
 {
@@ -164,10 +165,10 @@ struct					pingdata
 
 void					parse_opts(int ac, char **av);
 void					stop_ping(int exit_code);
-void					help_message(char *prog_name);
+void					help_message(void);
 bool					build_packet(uint16_t seq, struct icmp_packet **pack_ptr);
-bool					init_socket(char *prog_name);
-bool					resolve_hostname(char *prog_name, char *hostname);
+bool					init_socket(void);
+bool					resolve_hostname(char *hostname);
 void					ping_loop(void);
 void					free_list(struct rtt_node **head);
 void					sigint_handler(int signal MAYBE_UNUSED);

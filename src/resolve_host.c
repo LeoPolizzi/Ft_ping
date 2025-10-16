@@ -12,7 +12,7 @@
 
 #include "ft_ping.h"
 
-bool	resolve_hostname(char *prog_name, char *hostname)
+bool	resolve_hostname(char *hostname)
 {
 	struct addrinfo	hints;
 	struct addrinfo	*res;

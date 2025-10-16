@@ -113,12 +113,12 @@ void parse_opts(int ac, char **av)
 		   stop_ping(EXIT_SUCCESS);
 		   break;
         case ('?'):
-            help_message(av[0]);
+            help_message();
             stop_ping(EXIT_FAILURE);
             break;
         default:
             fprintf(stderr, "Error: Unknown option '-%c'.\n", c);
-            help_message(av[0]);
+            help_message();
             stop_ping(EXIT_FAILURE);
             break;
         }

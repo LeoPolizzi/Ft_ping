@@ -10,9 +10,18 @@
 #                                                                              #
 # **************************************************************************** #
 
-CC = cc
+CC = clang
 
-CFLAGS = -Wall -Wextra -Werror -O3 -funroll-loops -march=native -I./inc
+CFLAGS = -Wall -Wextra -Werror -Wpedantic -I./inc
+
+OPTIFLAGS = -Ofast -march=native -mtune=native -funroll-loops -flto \
+			-fvectorize -fslp-vectorize -fstrict-aliasing -ffast-math -fno-math-errno \
+			-fomit-frame-pointer -fmerge-all-constants -falign-functions=32 \
+			-freciprocal-math -funsafe-math-optimizations \
+			-finline-functions -finline-limit=1000 -frename-registers \
+			-fno-trapping-math -fno-signaling-nans -falign-loops=32 -falign-jumps=32 \
+			-fno-stack-protector -fdata-sections -ffunction-sections -Wl,--gc-sections
+
 LDFLAGS = -lm
 
 NAME = ft_ping
@@ -31,9 +40,24 @@ OBJS = $(SRCS:.c=.o)
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	@echo "$(YELLOW)Compiling $(NAME)...$(NC)"
-	@$(CC) $(CFLAGS) $(OBJS) -o $(NAME) $(LDFLAGS)
-	@echo "$(GREEN)$(NAME) compiled successfully!$(NC)"
+	@echo -e "$(YELLOW)Compiling $(NAME)...$(NC)"
+	@$(CC) $(CFLAGS) $(OPTIFLAGS) $(OBJS) -o $(NAME) $(LDFLAGS)
+	@echo -e "$(GREEN)$(NAME) compiled successfully!$(NC)"
+	@if [ "$$(id -u)" -eq 0 ]; then \
+		echo -e "$(YELLOW)Setting SUID bit on $(NAME)...$(NC)"; \
+		make setuid; \
+	else \
+		echo -e "$(RED)Warning: You are not root. SUID bit not set. Run 'sudo make setuid' to set it.$(NC)"; \
+	fi
+
+setuid:
+	@if [ "$$(id -u)" -ne 0 ]; then \
+		echo -e "$(RED)Error: You must be root to set the SUID bit.$(NC)"; \
+		exit 1; \
+	fi
+	@sudo chown root:root $(NAME)
+	@sudo chmod +s $(NAME)
+	@echo -e "$(GREEN)SUID bit set on $(NAME)!$(NC)"
 
 %.o: %.c
 	@$(CC) $(CFLAGS) -c $< -o $@

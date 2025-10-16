@@ -17,7 +17,7 @@ struct timeval last_sent = {0, 0}, start_time = {0, 0}, end_time = {0, 0};
 volatile bool	stop = false;
 char *prog_name = NULL;
 bool is_root = false;
-int g_icmp_id = 0;
+uint16_t g_icmp_id = 0;
 
 void	sigint_handler(int signal MAYBE_UNUSED)
 {
@@ -35,13 +35,13 @@ void	stop_ping(int exit_code)
 	exit(exit_code);
 }
 
-void	help_message(char *prog_name)
+void	help_message(void)
 {
 	fprintf(stderr, "Usage: %s [OPTION...] HOST ...\n", prog_name);
 	fprintf(stderr, HELP_MESSAGE);
 }
 
-void ending_stats()
+void ending_stats(void)
 {
 	//   struct timeval diff;
 	//   if (data.packinfo.nb_send > 1)
@@ -75,7 +75,7 @@ int		main(int ac, char **av)
 	g_icmp_id = getpid() & 0xFFFF;
 	is_root = (geteuid() == 0);
 	if (ac < 2)
-		return (help_message(av[0]), EXIT_FAILURE);
+		return (help_message(), EXIT_FAILURE);
 	memset(&data, 0, sizeof(data));
 	parse_opts(ac, av);
 	if (!is_root)
@@ -83,13 +83,13 @@ int		main(int ac, char **av)
 		fprintf(stderr, "%s: Lacking privilege for icmp socket.\n", av[0]);
 		stop_ping(EXIT_FAILURE);
 	}
-	if (!init_socket(av[0]))
+	if (!init_socket())
 		stop_ping(EXIT_FAILURE);
 	for (int i = 1; i < ac; i++)
 	{
 		if (av[i][0] != '-')
 		{
-			if (!resolve_hostname(av[0], av[i]))
+			if (!resolve_hostname(av[i]))
 				stop_ping(EXIT_FAILURE);
 			break ;
 		}
