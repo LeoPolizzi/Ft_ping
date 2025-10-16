@@ -10,19 +10,24 @@
 #                                                                              #
 # **************************************************************************** #
 
+YELLOW = \033[1;33m
+GREEN = \033[1;32m
+RED = \033[1;31m
+NC = \033[0m
+
 CC = clang
 
 CFLAGS = -Wall -Wextra -Werror -Wpedantic -I./inc
 
-OPTIFLAGS = -Ofast -march=native -mtune=native -funroll-loops -flto \
-			-fvectorize -fslp-vectorize -fstrict-aliasing -ffast-math -fno-math-errno \
-			-fomit-frame-pointer -fmerge-all-constants -falign-functions=32 \
+OPTIFLAGS = -O3 -ffast-math -march=native -mtune=native -funroll-loops -flto \
+			-fvectorize -fslp-vectorize -fstrict-aliasing -ffast-math \
+			-fno-math-errno -fomit-frame-pointer -fmerge-all-constants \
 			-freciprocal-math -funsafe-math-optimizations \
-			-finline-functions -finline-limit=1000 -frename-registers \
-			-fno-trapping-math -fno-signaling-nans -falign-loops=32 -falign-jumps=32 \
-			-fno-stack-protector -fdata-sections -ffunction-sections -Wl,--gc-sections
+			-finline-functions -fno-trapping-math -falign-functions=32 \
+			-falign-loops=32 -fno-stack-protector \
+			-fdata-sections -ffunction-sections
 
-LDFLAGS = -lm
+LDFLAGS = -flto -Wl,--gc-sections -lm
 
 NAME = ft_ping
 
@@ -60,17 +65,17 @@ setuid:
 	@echo -e "$(GREEN)SUID bit set on $(NAME)!$(NC)"
 
 %.o: %.c
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(OPTIFLAGS) -c $< -o $@
 
 clean:
-	@echo "$(YELLOW)Cleaning object files...$(NC)"
+	@echo -e "$(YELLOW)Cleaning object files...$(NC)"
 	@rm -f $(OBJS)
-	@echo "$(GREEN)Object files cleaned!$(NC)"
+	@echo -e "$(GREEN)Object files cleaned!$(NC)"
 
 fclean: clean
-	@echo "$(YELLOW)Removing $(NAME)...$(NC)"
+	@echo -e "$(YELLOW)Removing $(NAME)...$(NC)"
 	@rm -f $(NAME)
-	@echo "$(GREEN)$(NAME) removed!$(NC)"
+	@echo -e "$(GREEN)$(NAME) removed!$(NC)"
 
 re: fclean
 	@$(MAKE) all
