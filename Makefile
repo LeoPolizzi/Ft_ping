@@ -24,8 +24,7 @@ OPTIFLAGS = -O3 -ffast-math -march=native -mtune=native -funroll-loops \
 			-fno-math-errno -fomit-frame-pointer -fmerge-all-constants \
 			-freciprocal-math -funsafe-math-optimizations \
 			-finline-functions -fno-trapping-math -falign-functions=32 \
-			-falign-loops=32 -fno-stack-protector \
-			-fdata-sections -ffunction-sections
+			-fno-stack-protector -fdata-sections -ffunction-sections
 
 LDFLAGS = -flto -Wl,--gc-sections -lm
 
@@ -45,37 +44,37 @@ OBJS = $(SRCS:.c=.o)
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	@echo -e "$(YELLOW)Compiling $(NAME)...$(NC)"
+	@echo "$(YELLOW)Compiling $(NAME)...$(NC)"
 	@$(CC) $(CFLAGS) $(OPTIFLAGS) $(OBJS) -o $(NAME) $(LDFLAGS)
-	@echo -e "$(GREEN)$(NAME) compiled successfully!$(NC)"
+	@echo "$(GREEN)$(NAME) compiled successfully!$(NC)"
 	@if [ "$$(id -u)" -eq 0 ]; then \
-		echo -e "$(YELLOW)Setting SUID bit on $(NAME)...$(NC)"; \
+		echo "$(YELLOW)Setting SUID bit on $(NAME)...$(NC)"; \
 		make setuid; \
 	else \
-		echo -e "$(RED)Warning: You are not root. SUID bit not set. Run 'sudo make setuid' to set it.$(NC)"; \
+		echo "$(RED)Warning: You are not root. SUID bit not set. Run 'sudo make setuid' to set it.$(NC)"; \
 	fi
 
 setuid:
 	@if [ "$$(id -u)" -ne 0 ]; then \
-		echo -e "$(RED)Error: You must be root to set the SUID bit.$(NC)"; \
+		echo "$(RED)Error: You must be root to set the SUID bit.$(NC)"; \
 		exit 1; \
 	fi
 	@sudo chown root:root $(NAME)
 	@sudo chmod +s $(NAME)
-	@echo -e "$(GREEN)SUID bit set on $(NAME)!$(NC)"
+	@echo "$(GREEN)SUID bit set on $(NAME)!$(NC)"
 
 %.o: %.c
 	@$(CC) $(CFLAGS) $(OPTIFLAGS) -c $< -o $@
 
 clean:
-	@echo -e "$(YELLOW)Cleaning object files...$(NC)"
+	@echo "$(YELLOW)Cleaning object files...$(NC)"
 	@rm -f $(OBJS)
-	@echo -e "$(GREEN)Object files cleaned!$(NC)"
+	@echo "$(GREEN)Object files cleaned!$(NC)"
 
 fclean: clean
-	@echo -e "$(YELLOW)Removing $(NAME)...$(NC)"
+	@echo "$(YELLOW)Removing $(NAME)...$(NC)"
 	@rm -f $(NAME)
-	@echo -e "$(GREEN)$(NAME) removed!$(NC)"
+	@echo "$(GREEN)$(NAME) removed!$(NC)"
 
 re: fclean
 	@$(MAKE) all
