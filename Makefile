@@ -19,8 +19,8 @@ CC = clang
 
 CFLAGS = -Wall -Wextra -Werror -Wpedantic -I./inc
 
-OPTIFLAGS = -O3 -ffast-math -march=native -mtune=native -funroll-loops -flto \
-			-fvectorize -fslp-vectorize -fstrict-aliasing -ffast-math \
+OPTIFLAGS = -O3 -ffast-math -march=native -mtune=native -funroll-loops \
+			-fvectorize -fslp-vectorize -fstrict-aliasing \
 			-fno-math-errno -fomit-frame-pointer -fmerge-all-constants \
 			-freciprocal-math -funsafe-math-optimizations \
 			-finline-functions -fno-trapping-math -falign-functions=32 \
